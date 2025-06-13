@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>টাকা ক্যালকুলেটর</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #e0e5ec;
+      font-family: 'Siyam Rupali', sans-serif;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    .box {
+      background: #e0e5ec;
+      border-radius: 15px;
+      box-shadow: 8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: inset 3px 3px 6px #a3b1c6, inset -3px -3px 6px #ffffff;
+    }
+    button {
+      background: #e0e5ec;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 3px 3px 6px #a3b1c6, -3px -3px 6px #ffffff;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    h2, h3 {
+      margin-top: 0;
+    }
+    .hidden {
+      display: none;
+    }
+    .summary {
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .history-entry {
+      background: #f0f3f7;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="box" id="calculator">
+      <h2>💰 টাকা ক্যালকুলেটর</h2>
+
+      <label for="n500">৫০০ টাকার নোটের সংখ্যা</label>
+      <input type="number" id="n500" placeholder="উদাহরণ: 10">
+
+      <label for="n200">২০০ টাকার নোটের সংখ্যা</label>
+      <input type="number" id="n200" placeholder="উদাহরণ: 25">
+
+      <label for="n100">১০০ টাকার নোটের সংখ্যা</label>
+      <input type="number" id="n100" placeholder="উদাহরণ: 50">
+
+      <label for="n50">৫০ টাকার নোটের সংখ্যা</label>
+      <input type="number" id="n50"  placeholder="উদাহরণ: 100">
+
+      <div class="summary" id="totals"></div>
+
+      <button onclick="saveHistory()">সংরক্ষণ করুন</button>
+      <button onclick="showHistory()">হিস্টোরি</button>
+    </div>
+
+    <div class="box hidden" id="history">
+      <h2>🗂 হিস্টোরি</h2>
+      <div class="summary" id="historyTotals"></div>
+      <div id="historyList"></div>
+      <button onclick="showCalculator()">↩ ব্যাক</button>
+      <button onclick="clearHistory()">🗑 ডিলিট</button>
+    </div>
+  </div>
+
+  <script>
+    const getVal = id => parseInt(document.getElementById(id).value) || 0;
+
+    function calculateAndShow() {
+      const n500 = getVal('n500');
+      const n200 = getVal('n200');
+      const n100 = getVal('n100');
+      const n50  = getVal('n50');
+
+      const totalNotes = n500 + n200 + n100 + n50;
+      const totalAmount = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50);
+
+      document.getElementById('totals').innerHTML = `
+        টোটাল নোট: ${totalNotes}<br>
+        মোট টাকা: ৳${totalAmount}
+      `;
+
+      return { n500, n200, n100, n50, totalNotes, totalAmount, time: new Date().toLocaleString() };
+    }
+
+    ['n500','n200','n100','n50'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateAndShow);
+    });
+
+    function clearInputs() {
+      ['n500','n200','n100','n50'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      calculateAndShow();
+    }
+
+    function saveHistory() {
+      const data = calculateAndShow(); // হিসাব করা
+      let history = JSON.parse(localStorage.getItem('history') || '[]');
+      history.push(data); // যোগ করা
+      localStorage.setItem('history', JSON.stringify(history));
+      clearInputs();      // ইনপুট ক্লিয়ার
+      showHistory();      // হিস্টরি দেখানো
+    }
+
+    function showCalculator() {
+      document.getElementById('calculator').classList.remove('hidden');
+      document.getElementById('history').classList.add('hidden');
+    }
+
+    function showHistory() {
+      document.getElementById('calculator').classList.add('hidden');
+      document.getElementById('history').classList.remove('hidden');
+
+      const history = JSON.parse(localStorage.getItem('history') || '[]');
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+
+      let totalAllNotes = 0;
+      let totalAllAmount = 0;
+
+      history.forEach((entry, i) => {
+        totalAllNotes += entry.totalNotes;
+        totalAllAmount += entry.totalAmount;
+
+        const div = document.createElement('div');
+        div.className = 'history-entry';
+        div.innerHTML = `
+          (${i + 1})<br>
+          ৫০০ x ${entry.n500} = ${entry.n500 * 500} <br>
+          ২০০ x ${entry.n200} = ${entry.n200 * 200} <br>
+          ১০০ x ${entry.n100} = ${entry.n100 * 100} <br>
+          ৫০ x ${entry.n50} = ${entry.n50 * 50} <br>
+          নোট: ${entry.totalNotes} <br>
+          টাকা: ৳${entry.totalAmount} <br>
+          (${entry.time})
+        `;
+        list.appendChild(div);
+      });
+
+      document.getElementById('historyTotals').innerHTML = `
+        টোটাল নোট: ${totalAllNotes}<br>
+        মোট টাকা: ৳${totalAllAmount}
+      `;
+    }
+
+    function clearHistory() {
+      if (confirm("সব হিস্টোরি ডিলিট করতে চান?")) {
+        localStorage.removeItem('history');
+        showHistory();
+      }
+    }
+
+    window.onload = calculateAndShow;
+  </script>
+</body>
+</html>
